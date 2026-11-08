@@ -10,3 +10,9 @@
 [submodule "src/lib/ros_ntrip_client"]
 	path = src/lib/ros_ntrip_client
 	url = https://github.com/olliewalsh/ros_ntrip_client.git
+[submodule "src/lib/ldlidar_stl_ros"]
+	path = src/lib/ldlidar_stl_ros
+	url = https://github.com/ldrobotSensorTeam/ldlidar_stl_ros.git
+[submodule "src/lib/teb_local_planner"]
+	path = src/lib/teb_local_planner
+	url = https://github.com/rst-tu-dortmund/teb_local_planner.git
