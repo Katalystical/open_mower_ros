@@ -16,3 +16,4 @@ TebLocalPlannerROS:
   min_obstacle_dist: 0.25 # safety distance to objects in the Costmap
   include_costmap_obstacles: true
   costmap_obstacles_behind_robot_dist: 0.5
+  
