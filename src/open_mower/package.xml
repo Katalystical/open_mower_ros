@@ -26,6 +26,10 @@
   <exec_depend>joy_teleop</exec_depend>
   <exec_depend>teleop_twist_joy</exec_depend>
   <exec_depend>mower_map</exec_depend>
+  <exec_depend>ldlidar_stl_ros</exec_depend>
+  <exec_depend>roslib</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>tf</exec_depend>
   <exec_depend>mbf_costmap_nav</exec_depend>
   <exec_depend>ftc_local_planner</exec_depend>
   <exec_depend>global_planner</exec_depend>
