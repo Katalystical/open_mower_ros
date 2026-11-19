@@ -6,8 +6,8 @@
 namespace mower_map {
 
 // The images use 0 for free and 255 for occupied.
-inline cv::Mat makeSoftBoundaryMap(const cv::Mat& navigation, const cv::Mat& obstacles,
-                                   double resolution, double width) {
+inline cv::Mat makeSoftBoundaryMap(const cv::Mat& navigation, const cv::Mat& obstacles, double resolution,
+                                   double width) {
   CV_Assert(navigation.type() == CV_8UC1 && obstacles.type() == CV_8UC1);
   CV_Assert(navigation.size() == obstacles.size() && resolution > 0.0 && width > 0.0);
 

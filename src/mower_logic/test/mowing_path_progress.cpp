@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+
 #include <cmath>
 #include <limits>
 #include <utility>
@@ -29,8 +30,7 @@ TEST(MowingPathProgress, DoesNotJumpAcrossNearbyHairpin) {
 }
 
 TEST(MowingPathProgress, AdvancesInOrderThroughHairpin) {
-  const auto path = makePath({{0.0, 0.0}, {0.1, 0.0}, {0.2, 0.0}, {0.2, 0.1},
-                              {0.1, 0.1}, {0.0, 0.1}});
+  const auto path = makePath({{0.0, 0.0}, {0.1, 0.0}, {0.2, 0.0}, {0.2, 0.1}, {0.1, 0.1}, {0.0, 0.1}});
   int index = 0;
   for (size_t i = 0; i < path.size(); ++i) {
     const auto& point = path[i].pose.position;
@@ -40,8 +40,12 @@ TEST(MowingPathProgress, AdvancesInOrderThroughHairpin) {
 }
 
 TEST(MowingPathProgress, AdvancesPastInsideOfObservedTightTurn) {
-  const auto path = makePath({{-17.571, -5.931}, {-17.637, -6.003}, {-17.567, -5.968},
-                              {-17.480, -5.919}, {-17.391, -5.872}, {-17.303, -5.826},
+  const auto path = makePath({{-17.571, -5.931},
+                              {-17.637, -6.003},
+                              {-17.567, -5.968},
+                              {-17.480, -5.919},
+                              {-17.391, -5.872},
+                              {-17.303, -5.826},
                               {-17.216, -5.777}});
   int index = 0;
   index = orderedMowingPathIndex(path, index, -17.447, -5.889);
@@ -53,8 +57,8 @@ TEST(MowingPathProgress, AdvancesPastInsideOfObservedTightTurn) {
 }
 
 TEST(MowingPathProgress, AdvancesPastInsideOfObservedSecondTurn) {
-  const auto path = makePath({{-17.168, 3.900}, {-17.227, 3.820}, {-17.165, 3.791},
-                              {-17.069, 3.762}, {-16.974, 3.729}});
+  const auto path =
+      makePath({{-17.168, 3.900}, {-17.227, 3.820}, {-17.165, 3.791}, {-17.069, 3.762}, {-16.974, 3.729}});
   int index = orderedMowingPathIndex(path, 0, -16.985, 3.820);
   EXPECT_EQ(2, index);
   index = orderedMowingPathIndex(path, index, -16.920, 3.794);
@@ -64,11 +68,17 @@ TEST(MowingPathProgress, AdvancesPastInsideOfObservedSecondTurn) {
 }
 
 TEST(MowingPathProgress, TracksRecordedTurnRecovery) {
-  const auto path = makePath({{0.0, 0.0}, {-0.011423, 0.099345}, {-0.022879, 0.198686},
-                              {-0.048826, 0.236995}, {-0.104108, 0.153665},
-                              {-0.159953, 0.070715}, {-0.216501, -0.011761},
-                              {-0.273188, -0.094142}, {-0.332398, -0.174717},
-                              {-0.371345, -0.265808}, {-0.397285, -0.362385}});
+  const auto path = makePath({{0.0, 0.0},
+                              {-0.011423, 0.099345},
+                              {-0.022879, 0.198686},
+                              {-0.048826, 0.236995},
+                              {-0.104108, 0.153665},
+                              {-0.159953, 0.070715},
+                              {-0.216501, -0.011761},
+                              {-0.273188, -0.094142},
+                              {-0.332398, -0.174717},
+                              {-0.371345, -0.265808},
+                              {-0.397285, -0.362385}});
   int index = 0;
   EXPECT_EQ(0, orderedMowingPathIndex(path, index, -0.256382, -0.008460));
   index = orderedMowingPathIndex(path, index, -0.278539, 0.019126);
@@ -86,8 +96,8 @@ TEST(MowingPathProgress, TracksRecordedTurnRecovery) {
 }
 
 TEST(MowingPathProgress, CornerLookaheadIsLimitedByPathLength) {
-  const auto path = makePath({{0.0, 0.0}, {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0},
-                              {0.3, 0.1}, {0.2, 0.1}, {0.1, 0.1}, {0.0, 0.1}});
+  const auto path =
+      makePath({{0.0, 0.0}, {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0}, {0.3, 0.1}, {0.2, 0.1}, {0.1, 0.1}, {0.0, 0.1}});
   int index = 1;
   for (int i = 0; i < 10; ++i) {
     index = orderedMowingPathIndex(path, index, 0.1, 0.1);

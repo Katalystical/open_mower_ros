@@ -1,7 +1,8 @@
-#include <gtest/gtest.h>
+#include "../src/soft_boundary_map.h"
+
 #include <base_local_planner/costmap_model.h>
 #include <costmap_2d/cost_values.h>
-#include "../src/soft_boundary_map.h"
+#include <gtest/gtest.h>
 
 TEST(SoftBoundaryMap, LimitsBandAndKeepsObstacleCellsLethal) {
   cv::Mat navigation(11, 11, CV_8UC1, cv::Scalar(255));
@@ -37,10 +38,14 @@ TEST(SoftBoundaryMap, FootprintAcceptsSoftCostButRejectsLethalObstacle) {
   costmap_2d::Costmap2D costmap(20, 20, 0.1, 0.0, 0.0, costmap_2d::FREE_SPACE);
   base_local_planner::CostmapModel model(costmap);
   std::vector<geometry_msgs::Point> footprint(4);
-  footprint[0].x = -0.2; footprint[0].y = -0.2;
-  footprint[1].x = 0.2; footprint[1].y = -0.2;
-  footprint[2].x = 0.2; footprint[2].y = 0.2;
-  footprint[3].x = -0.2; footprint[3].y = 0.2;
+  footprint[0].x = -0.2;
+  footprint[0].y = -0.2;
+  footprint[1].x = 0.2;
+  footprint[1].y = -0.2;
+  footprint[2].x = 0.2;
+  footprint[2].y = 0.2;
+  footprint[3].x = -0.2;
+  footprint[3].y = 0.2;
   costmap.setCost(12, 10, 203);
   EXPECT_GE(model.footprintCost(1.05, 1.05, 0.0, footprint, 0.2, 0.3), 0.0);
   costmap.setCost(12, 10, costmap_2d::LETHAL_OBSTACLE);
@@ -60,10 +65,14 @@ TEST(SoftBoundaryMap, FootprintFitsNarrowVirtualCorridorButNotObstacle) {
   }
   base_local_planner::CostmapModel model(costmap);
   std::vector<geometry_msgs::Point> footprint(4);
-  footprint[0].x = -0.3; footprint[0].y = -0.2;
-  footprint[1].x = 0.3; footprint[1].y = -0.2;
-  footprint[2].x = 0.3; footprint[2].y = 0.2;
-  footprint[3].x = -0.3; footprint[3].y = 0.2;
+  footprint[0].x = -0.3;
+  footprint[0].y = -0.2;
+  footprint[1].x = 0.3;
+  footprint[1].y = -0.2;
+  footprint[2].x = 0.3;
+  footprint[2].y = 0.2;
+  footprint[3].x = -0.3;
+  footprint[3].y = 0.2;
   EXPECT_EQ(-1.0, model.footprintCost(0.775, 0.775, 0.0, footprint, 0.2, 0.4));
   for (int y = 0; y < softened.rows; ++y) {
     for (int x = 0; x < softened.cols; ++x) {

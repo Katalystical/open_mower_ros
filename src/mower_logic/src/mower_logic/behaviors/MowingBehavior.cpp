@@ -13,10 +13,6 @@
 // <https://www.gnu.org/licenses/>.
 //
 #include "MowingBehavior.h"
-#include "ApproachProgressWatchdog.h"
-#include "ApproachRouteProgress.h"
-#include "MowingPathProgress.h"
-#include "PathProgressWatchdog.h"
 
 #include <cryptopp/cryptlib.h>
 #include <cryptopp/hex.h>
@@ -25,8 +21,8 @@
 #include <nav_msgs/Path.h>
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2/utils.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <xbot_msgs/AbsolutePose.h>
 
 #include <EmergencyServiceInterfaceBase.hpp>
@@ -35,6 +31,10 @@
 #include <limits>
 
 #include "../StateSubscriber.h"
+#include "ApproachProgressWatchdog.h"
+#include "ApproachRouteProgress.h"
+#include "MowingPathProgress.h"
+#include "PathProgressWatchdog.h"
 #include "mower_logic/CheckPoint.h"
 #include "mower_map/ClearNavPointSrv.h"
 #include "mower_map/GetMowingAreaSrv.h"
@@ -321,7 +321,7 @@ int getCurrentMowPathIndex(const std::vector<geometry_msgs::PoseStamped>& path, 
   const std::string path_frame = path[start].header.frame_id;
   if (!path_frame.empty() && !current_pose.header.frame_id.empty() && path_frame != current_pose.header.frame_id) {
     ROS_ERROR_STREAM_THROTTLE(5, "MowingBehavior: Cannot track TEB progress across frames "
-                                    << current_pose.header.frame_id << " and " << path_frame);
+                                     << current_pose.header.frame_id << " and " << path_frame);
     return -1;
   }
 
@@ -568,13 +568,12 @@ bool MowingBehavior::execute_mowing_plan() {
               const double y = pose.pose.pose.position.y;
               distance = std::hypot(x - target.pose.position.x, y - target.pose.position.y);
               if (pose.orientation_valid) {
-                angle = std::abs(std::remainder(tf2::getYaw(pose.pose.pose.orientation) -
-                                                tf2::getYaw(target.pose.orientation), 2.0 * M_PI));
+                angle = std::abs(std::remainder(
+                    tf2::getYaw(pose.pose.pose.orientation) - tf2::getYaw(target.pose.orientation), 2.0 * M_PI));
               }
               mbf_msgs::ExePathActionGoal route_goal;
               if (exe_path_goal_subscriber.getMessageSince(route_sequence, route_goal) &&
-                  route_goal.goal_id.stamp >= approach_start &&
-                  route_goal.goal.controller == moveBaseGoal.controller) {
+                  route_goal.goal_id.stamp >= approach_start && route_goal.goal.controller == moveBaseGoal.controller) {
                 if (!approach_route.setPath(route_goal.goal.path, target, x, y)) {
                   approach_route.clearPath();
                   ROS_WARN("MowingBehavior: Cannot track approach route; using distance to the target instead.");
@@ -582,19 +581,21 @@ bool MowingBehavior::execute_mowing_plan() {
               }
               route_progress = approach_route.update(x, y);
               if (!approach_route.tracking() && now - approach_start.toSec() > 3.0) {
-                ROS_WARN_THROTTLE(30, "MowingBehavior: Approach route unavailable or too far away; "
-                                      "monitoring distance to the target instead.");
+                ROS_WARN_THROTTLE(30,
+                                  "MowingBehavior: Approach route unavailable or too far away; "
+                                  "monitoring distance to the target instead.");
               }
             } else {
-              ROS_ERROR_STREAM_THROTTLE(5, "MowingBehavior: (FIRST POINT) Cannot measure approach progress across frames "
+              ROS_ERROR_STREAM_THROTTLE(5,
+                                        "MowingBehavior: (FIRST POINT) Cannot measure approach progress across frames "
                                             << pose.header.frame_id << " and " << target.header.frame_id);
             }
           }
           const double timeout = getConfig().mowing_approach_progress_timeout;
           if (approach_watchdog.update(distance, angle, now, timeout, route_progress)) {
-            ROS_ERROR_STREAM("MowingBehavior: (FIRST POINT) No approach progress for " << timeout
-                             << " seconds (action state " << current_status.toString()
-                             << ", distance " << distance << " m). Pausing without skipping the mowing path.");
+            ROS_ERROR_STREAM("MowingBehavior: (FIRST POINT) No approach progress for "
+                             << timeout << " seconds (action state " << current_status.toString() << ", distance "
+                             << distance << " m). Pausing without skipping the mowing path.");
             mowerEnabled = false;
             mbfClient->cancelGoal();
             requestPause();
@@ -740,8 +741,8 @@ bool MowingBehavior::execute_mowing_plan() {
             }
             const double progress_timeout = getConfig().mowing_progress_timeout;
             if (progress_watchdog.update(currentMowingPathIndex, ros::Time::now().toSec(), progress_timeout)) {
-              ROS_ERROR_STREAM("MowingBehavior: (MOW) No path progress for " << progress_timeout
-                               << " seconds at index " << currentMowingPathIndex
+              ROS_ERROR_STREAM("MowingBehavior: (MOW) No path progress for "
+                               << progress_timeout << " seconds at index " << currentMowingPathIndex
                                << ". Pausing without skipping the current path segment.");
               mowerEnabled = false;
               mbfClientExePath->cancelGoal();
@@ -758,8 +759,8 @@ bool MowingBehavior::execute_mowing_plan() {
             if (ros::Time::now() - last_checkpoint > ros::Duration(30.0)) checkpoint();
           }
         } else {
-          ROS_INFO_STREAM("MowingBehavior: (MOW)  Got status " << current_status.state_
-                                                               << " from MBF/TebLocalPlannerROS -> Stopping path execution.");
+          ROS_INFO_STREAM("MowingBehavior: (MOW)  Got status "
+                          << current_status.state_ << " from MBF/TebLocalPlannerROS -> Stopping path execution.");
           // we're done, break out of the loop
           break;
         }
@@ -773,8 +774,7 @@ bool MowingBehavior::execute_mowing_plan() {
                         << currentMowingPathIndex << " of " << path.path.poses.size());
         printNavState(current_status.state_);
         if (mowingPathCompleted(currentMowingPathIndex, path.path.poses.size(),
-                                current_status.state_ == actionlib::SimpleClientGoalState::SUCCEEDED))
-        {
+                                current_status.state_ == actionlib::SimpleClientGoalState::SUCCEEDED)) {
           ROS_INFO_STREAM("MowingBehavior: (MOW) Mow path finished, skipping to next mow path.");
           currentMowingPath++;
           currentMowingPathIndex = 0;

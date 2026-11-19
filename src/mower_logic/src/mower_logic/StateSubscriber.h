@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <mutex>
+
 #include "ros/ros.h"
 
 template <typename MESSAGE>

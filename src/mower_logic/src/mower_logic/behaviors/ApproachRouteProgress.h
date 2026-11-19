@@ -1,15 +1,15 @@
 #ifndef MOWER_LOGIC_APPROACH_ROUTE_PROGRESS_H
 #define MOWER_LOGIC_APPROACH_ROUTE_PROGRESS_H
 
+#include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Path.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <limits>
 #include <utility>
 #include <vector>
-
-#include <geometry_msgs/PoseStamped.h>
-#include <nav_msgs/Path.h>
 
 class ApproachRouteProgress {
  public:
@@ -72,7 +72,9 @@ class ApproachRouteProgress {
     tracking_ = false;
   }
 
-  bool tracking() const { return tracking_; }
+  bool tracking() const {
+    return tracking_;
+  }
 
   bool update(double x, double y) {
     if (path_.poses.empty() || !std::isfinite(x) || !std::isfinite(y)) {
