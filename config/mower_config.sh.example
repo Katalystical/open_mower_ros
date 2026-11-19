@@ -244,7 +244,7 @@ export OM_ENABLE_MOWER=true
 #  0 - MANUAL - mowing requires manual start (default if unset)
 export OM_AUTOMATIC_MODE=0
 
-export OM_OUTLINE_OFFSET=0.05
+export OM_OUTLINE_OFFSET=0.4
 
 # Optional soft navigation-boundary band in metres. Only use where all ground
 # outside the recorded area within this distance is safe to drive on.

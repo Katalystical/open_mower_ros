@@ -504,9 +504,9 @@
         },
         "OM_OUTLINE_OFFSET": {
           "type": "number",
-          "default": 0.05,
+          "default": 0.4,
           "title": "Mowing Outline Offset",
-          "description": "Offset to be applied to the recorded outline. Positive values move the outline inwards (i.e. safety margin).",
+          "description": "Inward offset applied to the recorded outline. Use at least 0.4 m to provide clearance for the mower footprint.",
           "x-environment-variable": "OM_OUTLINE_OFFSET"
         },
         "OM_SOFT_BOUNDARY_WIDTH": {

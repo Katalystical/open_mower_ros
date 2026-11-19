@@ -132,7 +132,7 @@
                value="$(optenv OM_CHARGE_CRITICAL_HIGH_CURRENT -1)"/>
         <param name="mower_logic/outline_count" value="$(env OM_OUTLINE_COUNT)"/>
         <param name="mower_logic/outline_overlap_count" value="$(optenv OM_OUTLINE_OVERLAP_COUNT 0)"/>
-        <param name="mower_logic/outline_offset" value="$(env OM_OUTLINE_OFFSET)"/>
+        <param name="mower_logic/outline_offset" value="$(optenv OM_OUTLINE_OFFSET 0.4)"/>
         <param name="mower_logic/mow_angle_offset" value="$(optenv OM_MOWING_ANGLE_OFFSET 0)"/>
         <param name="mower_logic/mow_angle_offset_is_absolute"
                value="$(optenv OM_MOWING_ANGLE_OFFSET_IS_ABSOLUTE False)"/>
