@@ -71,6 +71,61 @@
         }
       }
     },
+    "lidar_settings": {
+      "title": "LD19 LiDAR Settings",
+      "type": "object",
+      "properties": {
+        "OM_LD19": {
+          "type": "boolean",
+          "default": false,
+          "title": "Enable LD19",
+          "description": "Enable the LD19 driver and automatic-motion safety gate.",
+          "x-environment-variable": "OM_LD19"
+        },
+        "OM_LD19_X": {
+          "type": "number",
+          "default": 0.0,
+          "title": "LiDAR X",
+          "description": "Forward position relative to base_link in metres.",
+          "x-environment-variable": "OM_LD19_X"
+        },
+        "OM_LD19_Y": {
+          "type": "number",
+          "default": 0.0,
+          "title": "LiDAR Y",
+          "description": "Leftward position relative to base_link in metres.",
+          "x-environment-variable": "OM_LD19_Y"
+        },
+        "OM_LD19_Z": {
+          "type": "number",
+          "default": 0.18,
+          "title": "LiDAR Z",
+          "description": "Upward position relative to base_link in metres.",
+          "x-environment-variable": "OM_LD19_Z"
+        },
+        "OM_LD19_YAW": {
+          "type": "number",
+          "default": 0.0,
+          "title": "LiDAR Yaw",
+          "description": "Rotation about the vertical axis in radians; positive is counterclockwise viewed from above.",
+          "x-environment-variable": "OM_LD19_YAW"
+        },
+        "OM_LD19_PITCH": {
+          "type": "number",
+          "default": 0.0,
+          "title": "LiDAR Pitch",
+          "description": "Rotation about the lateral axis in radians.",
+          "x-environment-variable": "OM_LD19_PITCH"
+        },
+        "OM_LD19_ROLL": {
+          "type": "number",
+          "default": 0.0,
+          "title": "LiDAR Roll",
+          "description": "Rotation about the forward axis in radians.",
+          "x-environment-variable": "OM_LD19_ROLL"
+        }
+      }
+    },
     "gps_settings": {
       "title": "GPS Settings",
       "type": "object",

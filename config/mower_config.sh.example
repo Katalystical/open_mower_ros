@@ -68,6 +68,17 @@ export OM_MOWER_ESC_TYPE="xesc_mini"
 # Currently supported: ps3, shield, steam_stick, steam_touch, switch_pro, xbox360
 export OM_MOWER_GAMEPAD="xbox360"
 
+# Optional LD19 mounting pose relative to base_link.
+# Translation is in metres (x forward, y left, z up); angles are in radians.
+# Positive yaw turns counterclockwise as viewed from above.
+# export OM_LD19=false
+# export OM_LD19_X=0.0
+# export OM_LD19_Y=0.0
+# export OM_LD19_Z=0.18
+# export OM_LD19_YAW=0.0
+# export OM_LD19_PITCH=0.0
+# export OM_LD19_ROLL=0.0
+
 # Ignore Charging Current
 # If you're affected by a wrong IC2 sourcing, read here https://openmower.de/docs/versions/errata/ic2-is-wrong/
 # for more details, you can disable the wrong charging current reading by disabling the charging protection via:
