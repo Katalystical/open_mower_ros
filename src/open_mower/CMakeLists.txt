@@ -165,6 +165,8 @@ include_directories(
 # Script for detecting LD19 lidar availability
 catkin_install_python(PROGRAMS
         scripts/ld19_availability.py
+        scripts/ld19_safety_stop.py
+        scripts/ld19_safety_gate.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
@@ -207,4 +209,10 @@ catkin_install_python(PROGRAMS
 # endif()
 
 ## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
+if(CATKIN_ENABLE_TESTING)
+  catkin_add_nosetests(test/test_ld19_safety_gate.py)
+  catkin_add_nosetests(test/test_ld19_safety_stop.py)
+  catkin_add_nosetests(test/test_ld19_mount_launch.py)
+  find_package(rostest REQUIRED)
+  add_rostest(test/ld19_safety_gate.test)
+endif()

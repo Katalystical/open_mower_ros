@@ -2,10 +2,42 @@
     Use this file to test your move_base config. You should be able to move the bot around the map using RVIZ.
 -->
 <launch>
+    <arg name="use_ld19" default="$(optenv OM_LD19 false)"/>
+    <arg name="ld19_x" default="$(optenv OM_LD19_X 0.0)"/>
+    <arg name="ld19_y" default="$(optenv OM_LD19_Y 0.0)"/>
+    <arg name="ld19_z" default="$(optenv OM_LD19_Z 0.18)"/>
+    <arg name="ld19_yaw" default="$(optenv OM_LD19_YAW 0.0)"/>
+    <arg name="ld19_pitch" default="$(optenv OM_LD19_PITCH 0.0)"/>
+    <arg name="ld19_roll" default="$(optenv OM_LD19_ROLL 0.0)"/>
+
     <include file="$(find open_mower)/launch/include/_params.launch"/>
     <include file="$(find open_mower)/launch/include/_comms.launch"/>
-    <include file="$(find open_mower)/launch/include/_ld19.launch"/>
-    <include file="$(find open_mower)/launch/include/_move_base.launch"/>
+    <include file="$(find open_mower)/launch/include/_ld19.launch">
+        <arg name="enabled" value="$(arg use_ld19)"/>
+        <arg name="x" value="$(arg ld19_x)"/>
+        <arg name="y" value="$(arg ld19_y)"/>
+        <arg name="z" value="$(arg ld19_z)"/>
+        <arg name="yaw" value="$(arg ld19_yaw)"/>
+        <arg name="pitch" value="$(arg ld19_pitch)"/>
+        <arg name="roll" value="$(arg ld19_roll)"/>
+    </include>
+    <include file="$(find open_mower)/launch/include/_move_base.launch">
+        <arg name="use_ld19" value="$(arg use_ld19)"/>
+    </include>
+    <node pkg="open_mower" type="ld19_safety_stop.py" name="ld19_safety_stop" output="screen"
+          respawn="true" respawn_delay="1" if="$(arg use_ld19)">
+        <param name="stop_distance" value="0.65"/>
+        <param name="clear_distance" value="0.85"/>
+        <param name="clear_time" value="2.0"/>
+        <param name="scan_timeout" value="0.5"/>
+    </node>
+    <node pkg="open_mower" type="ld19_safety_gate.py" name="ld19_safety_gate" output="screen"
+          respawn="true" respawn_delay="1" if="$(arg use_ld19)">
+        <remap from="~nav_vel" to="/nav_vel"/>
+        <remap from="~logic_vel" to="/logic_vel"/>
+        <remap from="~nav_vel_out" to="/ld19_safety/nav_vel"/>
+        <remap from="~logic_vel_out" to="/ld19_safety/logic_vel"/>
+    </node>
     <include file="$(find open_mower)/launch/include/_localization.launch"/>
     <!--    <include file="$(find open_mower)/launch/include/_record.launch">-->
     <!--        <arg name="prefix" value="move_around"/>-->
@@ -15,6 +47,8 @@
     <node pkg="mower_map" type="mower_map_service" name="map_service" output="screen"/>
 
     <node pkg="twist_mux" type="twist_mux" name="twist_mux" output="screen">
+        <remap from="nav_vel" to="/ld19_safety/nav_vel" if="$(arg use_ld19)"/>
+        <remap from="logic_vel" to="/ld19_safety/logic_vel" if="$(arg use_ld19)"/>
         <remap from="cmd_vel_out" to="/ll/cmd_vel"/>
 
         <rosparam file="$(find open_mower)/params/twist_mux_topics.yaml" command="load"/>

@@ -29,6 +29,9 @@
   <exec_depend>ldlidar_stl_ros</exec_depend>
   <exec_depend>roslib</exec_depend>
   <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
   <exec_depend>tf</exec_depend>
   <exec_depend>mbf_costmap_nav</exec_depend>
   <exec_depend>ftc_local_planner</exec_depend>
@@ -40,6 +43,9 @@
   <exec_depend>rtcm_msgs</exec_depend>
   <exec_depend>rosbag_snapshot</exec_depend>
 
+  <test_depend>python3-nose</test_depend>
+  <test_depend>roslaunch</test_depend>
+  <test_depend>rostest</test_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

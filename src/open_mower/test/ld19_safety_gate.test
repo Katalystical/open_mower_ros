@@ -1,0 +1,16 @@
+<launch>
+  <node pkg="twist_mux" type="twist_mux" name="twist_mux">
+    <remap from="nav_vel" to="/ld19_safety/nav_vel"/>
+    <remap from="logic_vel" to="/ld19_safety/logic_vel"/>
+    <remap from="cmd_vel_out" to="/ll/cmd_vel"/>
+    <rosparam file="$(find open_mower)/params/twist_mux_topics.yaml" command="load"/>
+  </node>
+  <node pkg="open_mower" type="ld19_safety_gate.py" name="ld19_safety_gate">
+    <remap from="~nav_vel" to="/nav_vel"/>
+    <remap from="~logic_vel" to="/logic_vel"/>
+    <remap from="~nav_vel_out" to="/ld19_safety/nav_vel"/>
+    <remap from="~logic_vel_out" to="/ld19_safety/logic_vel"/>
+  </node>
+  <test test-name="ld19_safety_gate_integration" pkg="open_mower"
+        type="test_ld19_safety_gate_ros.py" time-limit="30"/>
+</launch>

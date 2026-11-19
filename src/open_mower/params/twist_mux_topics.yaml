@@ -17,7 +17,14 @@ topics:
     timeout : 0.5
     priority: 50
   -
-    name    : logic
+    name    : manual
+    topic   : manual_vel
+    timeout : 0.5
+    priority: 75
+  -
+    name    : override
     topic   : override_vel
     timeout : 0.5
     priority: 100
+
+locks: []
