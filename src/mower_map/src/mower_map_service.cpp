@@ -15,6 +15,7 @@
 #include <cmath>
 #include <limits>
 
+#include "soft_boundary_map.h"
 #include "grid_map_cv/GridMapCvConverter.hpp"
 #include "grid_map_ros/GridMapRosConverter.hpp"
 #include "grid_map_ros/PolygonRosConverter.hpp"
@@ -212,6 +213,7 @@ geometry_msgs::Pose fake_obstacle_pose;
 
 // The grid map. This is built from the polygons loaded from the file.
 grid_map::GridMap map;
+double soft_boundary_width = 0.0;
 
 // clang-format off
 xbot_mqtt::RpcProvider rpc_provider("mower_map_service", {{
@@ -404,7 +406,8 @@ void visualizeAreas() {
  *
  * Then, all obstacles are marked as occupied.
  *
- * Finally, a blur is applied to the map so that it is expensive, but not completely forbidden to drive near boundaries.
+ * By default the combined map is blurred for compatibility. With a soft boundary enabled, only the area boundary is
+ * softened; mapped obstacles remain occupied.
  */
 void buildMap() {
   // First, calculate the size of the map by finding the min and max values for x and y.
@@ -427,12 +430,12 @@ void buildMap() {
     }
   }
 
-  // Enlarge the map by 1m in all directions.
-  // This guarantees that even after blurring, the map has an occupied border.
-  maxX += 1.0;
-  minX -= 1.0;
-  maxY += 1.0;
-  minY -= 1.0;
+  // Keep an occupied border outside the legacy blur or the soft boundary band.
+  const double map_padding = std::max(1.0, soft_boundary_width + 0.5);
+  maxX += map_padding;
+  minX -= map_padding;
+  maxY += map_padding;
+  minY -= map_padding;
 
   // Check, if the map was empty. If so, we'd create a huge map. Therefore we build an empty 10x10m map instead.
   if (!has_valid_area) {
@@ -470,6 +473,13 @@ void buildMap() {
     }
   }
 
+  cv::Mat navigation_image;
+  if (soft_boundary_width > 0.0) {
+    grid_map::GridMapCvConverter::toImage<unsigned char, 1>(map, "navigation_area", CV_8UC1, 0.0, 1.0,
+                                                            navigation_image);
+    map.add("obstacle_area", 0.0);
+  }
+
   for (const auto& area : map_data.areas) {
     if (!area.active) continue;
 
@@ -478,6 +488,7 @@ void buildMap() {
       for (grid_map::PolygonIterator iterator(map, poly); !iterator.isPastEnd(); ++iterator) {
         const grid_map::Index index(*iterator);
         data(index[0], index[1]) = 1.0;
+        if (soft_boundary_width > 0.0) map["obstacle_area"](index[0], index[1]) = 1.0;
       }
     }
   }
@@ -532,13 +543,20 @@ void buildMap() {
     for (grid_map::PolygonIterator iterator(map, poly); !iterator.isPastEnd(); ++iterator) {
       const grid_map::Index index(*iterator);
       data(index[0], index[1]) = 1.0;
+      if (soft_boundary_width > 0.0) map["obstacle_area"](index[0], index[1]) = 1.0;
     }
   }
 
   cv::Mat cv_map;
-  grid_map::GridMapCvConverter::toImage<unsigned char, 1>(map, "navigation_area", CV_8UC1, cv_map);
-
-  cv::blur(cv_map, cv_map, cv::Size(5, 5));
+  if (soft_boundary_width > 0.0) {
+    cv::Mat obstacle_image;
+    grid_map::GridMapCvConverter::toImage<unsigned char, 1>(map, "obstacle_area", CV_8UC1, 0.0, 1.0, obstacle_image);
+    cv_map = mower_map::makeSoftBoundaryMap(navigation_image, obstacle_image, map.getResolution(),
+                                           soft_boundary_width);
+  } else {
+    grid_map::GridMapCvConverter::toImage<unsigned char, 1>(map, "navigation_area", CV_8UC1, cv_map);
+    cv::blur(cv_map, cv_map, cv::Size(5, 5));
+  }
 
   grid_map::GridMapCvConverter::addLayerFromImage<unsigned char, 1>(cv_map, "navigation_area", map);
 
@@ -795,6 +813,13 @@ void convertLegacyMapToJson() {
 int main(int argc, char** argv) {
   ros::init(argc, argv, "mower_map_service");
   ros::NodeHandle n;
+  n.param("mower_map_service/soft_boundary_width", soft_boundary_width, 0.0);
+  if (!std::isfinite(soft_boundary_width) || soft_boundary_width < 0.0 || soft_boundary_width > 5.0) {
+    ROS_FATAL_STREAM("mower_map_service/soft_boundary_width must be between 0 and 5 metres, got "
+                     << soft_boundary_width);
+    return 1;
+  }
+  ROS_INFO_STREAM("Soft navigation boundary width: " << soft_boundary_width << " m");
   json_map_pub = n.advertise<std_msgs::String>("mower_map_service/json_map", 1, true);
   map_pub = n.advertise<nav_msgs::OccupancyGrid>("mower_map_service/map", 10, true);
   map_server_viz_array_pub = n.advertise<visualization_msgs::MarkerArray>("mower_map_service/map_viz", 10, true);

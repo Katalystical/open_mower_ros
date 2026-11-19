@@ -1,4 +1,6 @@
 <launch>
+  <arg name="soft_boundary_width" default="$(optenv OM_SOFT_BOUNDARY_WIDTH 0.0)"/>
+  <param name="mower_map_service/soft_boundary_width" value="$(arg soft_boundary_width)" type="double"/>
 
   <node name="move_base_flex" pkg="mbf_costmap_nav" type="mbf_costmap_nav" output="screen" respawn="true" respawn_delay="10">
     <remap from="cmd_vel" to="/nav_vel"/>
@@ -10,6 +12,12 @@
     <rosparam file="$(find open_mower)/params/ftc_local_planner.yaml" command="load" />
     <rosparam file="$(find open_mower)/params/docking_ftc_local_planner.yaml" command="load" />
     <rosparam file="$(find open_mower)/params/global_planner_params.yaml" command="load" />
+    <param name="global_costmap/static_layer/trinary_costmap"
+           value="$(eval float(arg('soft_boundary_width')) == 0.0)"/>
+    <param name="local_costmap/static_layer/trinary_costmap"
+           value="$(eval float(arg('soft_boundary_width')) == 0.0)"/>
+    <param name="global_costmap/static_layer/lethal_cost_threshold" value="100"/>
+    <param name="local_costmap/static_layer/lethal_cost_threshold" value="100"/>
   </node>
 
   <node name="move_base_legacy_relay" pkg="mbf_costmap_nav" type="move_base_legacy_relay.py" respawn="true" respawn_delay="10">

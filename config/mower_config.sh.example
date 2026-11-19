@@ -246,6 +246,10 @@ export OM_AUTOMATIC_MODE=0
 
 export OM_OUTLINE_OFFSET=0.05
 
+# Optional soft navigation-boundary band in metres. Only use where all ground
+# outside the recorded area within this distance is safe to drive on.
+export OM_SOFT_BOUNDARY_WIDTH=0.0
+
 # Rain mode
 #  0 - Ignore
 #  1 - Dock

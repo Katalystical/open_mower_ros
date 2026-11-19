@@ -34,6 +34,8 @@
     <depend>xbot_msgs</depend>
     <depend>xbot_mqtt</depend>
 
+    <test_depend>base_local_planner</test_depend>
+    <test_depend>costmap_2d</test_depend>
 
     <!-- The export tag contains other, unspecified, tags -->
     <export>

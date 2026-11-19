@@ -509,6 +509,15 @@
           "description": "Offset to be applied to the recorded outline. Positive values move the outline inwards (i.e. safety margin).",
           "x-environment-variable": "OM_OUTLINE_OFFSET"
         },
+        "OM_SOFT_BOUNDARY_WIDTH": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 5.0,
+          "default": 0.0,
+          "title": "Soft Navigation Boundary Width",
+          "description": "Distance in metres outside mapped navigation and mowing areas where travel is permitted at a cost. Only enable where this ground is safe for the entire mower.",
+          "x-environment-variable": "OM_SOFT_BOUNDARY_WIDTH"
+        },
         "OM_ENABLE_RECORDING_ALL": {
           "type": "boolean",
           "default": false,

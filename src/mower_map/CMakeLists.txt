@@ -219,6 +219,17 @@ target_link_libraries(mower_map_service ${catkin_LIBRARIES} ${OpenCV_LIBS} nlohm
 ## Testing ##
 #############
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(base_local_planner REQUIRED)
+  find_package(costmap_2d REQUIRED)
+  catkin_add_gtest(test_soft_boundary_map test/soft_boundary_map.cpp)
+  if(TARGET test_soft_boundary_map)
+    target_include_directories(test_soft_boundary_map PRIVATE ${base_local_planner_INCLUDE_DIRS} ${costmap_2d_INCLUDE_DIRS})
+    target_link_libraries(test_soft_boundary_map ${OpenCV_LIBS} ${catkin_LIBRARIES}
+                          ${base_local_planner_LIBRARIES} ${costmap_2d_LIBRARIES})
+  endif()
+endif()
+
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_mower_map.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
