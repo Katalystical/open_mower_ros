@@ -115,6 +115,8 @@ void onImu(const sensor_msgs::Imu::ConstPtr &msg) {
     odometry.pose.pose.position.z = 0;
     tf2::Quaternion q(0.0, 0.0, x.theta());
     odometry.pose.pose.orientation = tf2::toMsg(q);
+    odometry.twist.twist.linear.x = vx;
+    odometry.twist.twist.angular.z = msg->angular_velocity.z - gyro_offset;
 
     geometry_msgs::TransformStamped odom_trans;
     odom_trans.header = odometry.header;
