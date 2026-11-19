@@ -23,8 +23,8 @@ class VelocityCommand {
   }
 
   bool expire(TimePoint now) {
-    if (active_ && (now < last_command_ ||
-                    std::chrono::duration<double>(now - last_command_).count() >= TIMEOUT_SECONDS)) {
+    if (active_ &&
+        (now < last_command_ || std::chrono::duration<double>(now - last_command_).count() >= TIMEOUT_SECONDS)) {
       const bool moving = linear_ != 0.0 || angular_ != 0.0;
       clear();
       return moving;
@@ -38,8 +38,12 @@ class VelocityCommand {
     active_ = false;
   }
 
-  double linear() const { return linear_; }
-  double angular() const { return angular_; }
+  double linear() const {
+    return linear_;
+  }
+  double angular() const {
+    return angular_;
+  }
 
  private:
   double linear_ = 0.0;

@@ -15,11 +15,11 @@
 #include <cmath>
 #include <limits>
 
-#include "soft_boundary_map.h"
 #include "grid_map_cv/GridMapCvConverter.hpp"
 #include "grid_map_ros/GridMapRosConverter.hpp"
 #include "grid_map_ros/PolygonRosConverter.hpp"
 #include "ros/ros.h"
+#include "soft_boundary_map.h"
 #include "std_msgs/String.h"
 #include "visualization_msgs/MarkerArray.h"
 
@@ -551,8 +551,7 @@ void buildMap() {
   if (soft_boundary_width > 0.0) {
     cv::Mat obstacle_image;
     grid_map::GridMapCvConverter::toImage<unsigned char, 1>(map, "obstacle_area", CV_8UC1, 0.0, 1.0, obstacle_image);
-    cv_map = mower_map::makeSoftBoundaryMap(navigation_image, obstacle_image, map.getResolution(),
-                                           soft_boundary_width);
+    cv_map = mower_map::makeSoftBoundaryMap(navigation_image, obstacle_image, map.getResolution(), soft_boundary_width);
   } else {
     grid_map::GridMapCvConverter::toImage<unsigned char, 1>(map, "navigation_area", CV_8UC1, cv_map);
     cv::blur(cv_map, cv_map, cv::Size(5, 5));

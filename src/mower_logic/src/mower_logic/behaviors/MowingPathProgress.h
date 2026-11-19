@@ -1,14 +1,14 @@
 #ifndef MOWER_LOGIC_MOWING_PATH_PROGRESS_H
 #define MOWER_LOGIC_MOWING_PATH_PROGRESS_H
 
+#include <geometry_msgs/PoseStamped.h>
+
 #include <algorithm>
 #include <cmath>
 #include <vector>
 
-#include <geometry_msgs/PoseStamped.h>
-
-inline int orderedMowingPathIndex(const std::vector<geometry_msgs::PoseStamped>& path, int start_index,
-                                  double x, double y) {
+inline int orderedMowingPathIndex(const std::vector<geometry_msgs::PoseStamped>& path, int start_index, double x,
+                                  double y) {
   if (start_index < 0 || static_cast<size_t>(start_index) >= path.size() || !std::isfinite(x) || !std::isfinite(y))
     return -1;
 

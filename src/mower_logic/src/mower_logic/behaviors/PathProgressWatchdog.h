@@ -3,7 +3,8 @@
 
 class PathProgressWatchdog {
  public:
-  PathProgressWatchdog(int index, double now) : last_index_(index), last_progress_time_(now) {}
+  PathProgressWatchdog(int index, double now) : last_index_(index), last_progress_time_(now) {
+  }
 
   bool update(int index, double now, double timeout) {
     if (index > last_index_) {

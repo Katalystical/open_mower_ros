@@ -6,7 +6,8 @@
 
 class ApproachProgressWatchdog {
  public:
-  explicit ApproachProgressWatchdog(double now) : last_progress_time_(now) {}
+  explicit ApproachProgressWatchdog(double now) : last_progress_time_(now) {
+  }
 
   bool update(double distance, double angle, double now, double timeout, bool route_progress = false) {
     if (timeout <= 0.0 || now < last_progress_time_) {
