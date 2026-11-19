@@ -73,6 +73,7 @@ namespace ftc_local_planner
         current_state = PRE_ROTATE;
         state_entered_time = ros::Time::now();
         is_crashed = false;
+        goal_position_reached = false;
 
         global_plan = plan;
         current_index = 0;
@@ -172,6 +173,11 @@ namespace ftc_local_planner
         {
             cmd_vel.twist.linear.x = 0;
             cmd_vel.twist.angular.z = 0;
+            if (!goal_position_reached)
+            {
+                message = "FTC planner finished without reaching the goal position";
+                return RET_COLLISION;
+            }
             return RET_SUCCESS;
         }
 
@@ -211,7 +217,7 @@ namespace ftc_local_planner
 
     bool FTCPlanner::isGoalReached(double dist_tolerance, double angle_tolerance)
     {
-        return current_state == FINISHED && !is_crashed;
+        return current_state == FINISHED && !is_crashed && goal_position_reached;
     }
 
     bool FTCPlanner::cancel()
@@ -265,12 +271,15 @@ namespace ftc_local_planner
             double distance = local_control_point.translation().norm();
             if (time_in_current_state() > config.goal_timeout)
             {
-                ROS_WARN_STREAM("FTCLocalPlannerROS: Could not reach goal position. config.goal_timeout (" << config.goal_timeout << ") reached - Attempting final rotation anyways.");
+                ROS_WARN_STREAM("FTCLocalPlannerROS: Could not reach goal position. Distance is " << distance
+                    << " m; config.goal_timeout (" << config.goal_timeout
+                    << ") reached - Attempting final rotation, but the goal will fail.");
                 return POST_ROTATE;
             }
             if (distance < config.max_goal_distance_error)
             {
                 ROS_INFO_STREAM("FTCLocalPlannerROS: Reached goal position.");
+                goal_position_reached = true;
                 return POST_ROTATE;
             }
         }

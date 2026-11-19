@@ -45,6 +45,7 @@ namespace ftc_local_planner
         ros::Time state_entered_time;
 
         bool is_crashed;
+        bool goal_position_reached = false;
 
         dynamic_reconfigure::Server<FTCPlannerConfig> *reconfig_server;
 
