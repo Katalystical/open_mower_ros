@@ -12,6 +12,7 @@
     <rosparam file="$(find open_mower)/params/move_base_flex.yaml" command="load"/>
     <rosparam file="$(find open_mower)/params/ftc_local_planner.yaml" command="load" />
     <rosparam file="$(find open_mower)/params/docking_ftc_local_planner.yaml" command="load" />
+    <rosparam file="$(find open_mower)/params/teb_local_planner.yaml" command="load" />
     <rosparam file="$(find open_mower)/params/global_planner_params.yaml" command="load" />
     <param name="global_costmap/static_layer/trinary_costmap"
            value="$(eval float(arg('soft_boundary_width')) == 0.0)"/>
@@ -24,7 +25,7 @@
   </node>
 
   <node name="move_base_legacy_relay" pkg="mbf_costmap_nav" type="move_base_legacy_relay.py" respawn="true" respawn_delay="10">
-    <param name="base_local_planner" value="FTCPlanner" />
+    <param name="base_local_planner" value="TebLocalPlannerROS" />
     <param name="base_global_planner" value="GlobalPlanner" />
   </node>
 

@@ -39,7 +39,6 @@
 #include "behaviors/Behavior.h"
 #include "behaviors/IdleBehavior.h"
 #include "behaviors/PerimeterDocking.h"
-#include "ftc_local_planner/PlannerGetProgress.h"
 #include "mbf_msgs/ExePathAction.h"
 #include "mbf_msgs/MoveBaseAction.h"
 #include "mbf_msgs/RecoveryAction.h"
@@ -58,6 +57,7 @@
 #include "ros/callback_queue.h"
 #include "ros/ros.h"
 #include "slic3r_coverage_planner/PlanPath.h"
+#include "std_msgs/Bool.h"
 #include "std_msgs/String.h"
 #include "xbot_mqtt/provider.h"
 #include "xbot_mqtt/publish.h"
@@ -79,8 +79,8 @@ std::string current_job_id;
 std::string current_session_id;
 bool current_job_finished = false;
 
-ros::ServiceClient pathClient, mapClient, dockingPointClient, gpsClient, mowClient, emergencyClient, pathProgressClient,
-    setNavPointClient, clearNavPointClient, clearMapClient, positioningClient, actionRegistrationClient;
+ros::ServiceClient pathClient, mapClient, dockingPointClient, gpsClient, mowClient, emergencyClient, setNavPointClient,
+    clearNavPointClient, clearMapClient, positioningClient, actionRegistrationClient;
 
 ros::NodeHandle* n;
 ros::NodeHandle* paramNh;
@@ -90,7 +90,7 @@ actionlib::SimpleActionClient<mbf_msgs::MoveBaseAction>* mbfClient;
 actionlib::SimpleActionClient<mbf_msgs::ExePathAction>* mbfClientExePath;
 actionlib::SimpleActionClient<mbf_msgs::RecoveryAction>* mbfClientRecovery;
 
-ros::Publisher cmd_vel_pub, high_level_state_publisher, mqtt_publish_pub;
+ros::Publisher cmd_vel_pub, manual_vel_pub, high_level_state_publisher, mqtt_publish_pub;
 mower_logic::MowerLogicConfig last_config;
 ll::PowerConfig last_power_config;
 
@@ -101,6 +101,7 @@ StateSubscriber<mower_msgs::Bms> bms_state_subscriber{"/ll/bms"};
 StateSubscriber<mower_msgs::ESCStatus> left_esc_status_state_subscriber{"/ll/diff_drive/left_esc_status"};
 StateSubscriber<mower_msgs::ESCStatus> right_esc_status_state_subscriber{"/ll/diff_drive/right_esc_status"};
 StateSubscriber<xbot_msgs::AbsolutePose> pose_state_subscriber{"/xbot_positioning/xb_pose"};
+StateSubscriber<mbf_msgs::ExePathActionGoal> exe_path_goal_subscriber{"/move_base_flex/exe_path/goal"};
 ros::Time joy_vel_time(0.0);
 
 ros::Time last_good_gps(0.0);
@@ -110,6 +111,7 @@ std::recursive_mutex mower_logic_mutex;
 mower_msgs::HighLevelStatus high_level_status;
 
 std::atomic<bool> mowerAllowed;
+std::atomic<bool> ld19SafetyStopActive{false};
 
 Behavior* currentBehavior = &IdleBehavior::INSTANCE;
 
@@ -344,6 +346,7 @@ void stopMoving() {
   stop.angular.z = 0;
   stop.linear.x = 0;
   cmd_vel_pub.publish(stop);
+  manual_vel_pub.publish(stop);
 }
 
 /// @brief If the BLADE motor is currently enabled, we stop it
@@ -352,6 +355,24 @@ void stopBlade() {
   setMowerEnabled(false);
   mowerAllowed = false;
   // ROS_INFO_STREAM("om_mower_logic: stopBlade() - finished");
+}
+
+void ld19SafetyStopCallback(const std_msgs::Bool::ConstPtr& msg) {
+  const bool was_active = ld19SafetyStopActive.exchange(msg->data);
+  if (was_active == msg->data) return;
+
+  if (msg->data) {
+    ROS_WARN("LD19 safety stop active: stopping mower and pausing mowing");
+    if (currentBehavior == &MowingBehavior::INSTANCE) {
+      currentBehavior->requestPause(pauseType::PAUSE_LIDAR);
+    }
+    stopBlade();
+  } else {
+    ROS_INFO("LD19 safety stop cleared");
+    if (currentBehavior == &MowingBehavior::INSTANCE) {
+      currentBehavior->requestContinue(pauseType::PAUSE_LIDAR);
+    }
+  }
 }
 
 /// @brief Stop BLADE motor and any movement
@@ -462,7 +483,10 @@ void checkSafety(const ros::TimerEvent& timer_event) {
   high_level_status.is_charging = last_power.charge_voltage > 10.0 || last_power.charge_voltage_adc > 10.0;
 
   // Initialize to true, if after all checks it is still true then mower should be enabled.
-  mowerAllowed = true;
+  mowerAllowed = !ld19SafetyStopActive.load();
+  if (ld19SafetyStopActive.load() && currentBehavior == &MowingBehavior::INSTANCE) {
+    currentBehavior->requestPause(pauseType::PAUSE_LIDAR);
+  }
 
   // send to idle if emergency and we're not recording
   if (currentBehavior != nullptr) {
@@ -866,7 +890,7 @@ void actionReceived(const std_msgs::String::ConstPtr& action) {
 void joyVelReceived(const geometry_msgs::Twist::ConstPtr& joy_vel) {
   joy_vel_time = ros::Time::now();
   if (currentBehavior && currentBehavior->redirect_joystick()) {
-    cmd_vel_pub.publish(joy_vel);
+    manual_vel_pub.publish(joy_vel);
   }
 }
 
@@ -897,6 +921,7 @@ int main(int argc, char** argv) {
   last_power_config.__fromServer__(powerNodeHandle);
 
   cmd_vel_pub = n->advertise<geometry_msgs::Twist>("/logic_vel", 1);
+  manual_vel_pub = n->advertise<geometry_msgs::Twist>("/manual_vel", 1);
 
   high_level_state_publisher = n->advertise<mower_msgs::HighLevelStatus>("mower_logic/current_state", 100, true);
   mqtt_publish_pub = n->advertise<xbot_mqtt::MqttPublish>("/xbot_monitoring/mqtt_publish", 10);
@@ -914,9 +939,6 @@ int main(int argc, char** argv) {
 
   dockingPointClient = n->serviceClient<mower_map::GetDockingPointSrv>("mower_map_service/get_docking_point");
 
-  pathProgressClient =
-      n->serviceClient<ftc_local_planner::PlannerGetProgress>("/move_base_flex/FTCPlanner/planner_get_progress");
-
   setNavPointClient = n->serviceClient<mower_map::SetNavPointSrv>("mower_map_service/set_nav_point");
   clearNavPointClient = n->serviceClient<mower_map::ClearNavPointSrv>("mower_map_service/clear_nav_point");
 
@@ -931,9 +953,12 @@ int main(int argc, char** argv) {
   left_esc_status_state_subscriber.Start(n);
   right_esc_status_state_subscriber.Start(n);
   pose_state_subscriber.Start(n);
+  exe_path_goal_subscriber.Start(n);
 
   ros::Subscriber joy_cmd = n->subscribe("/joy_vel", 0, joyVelReceived, ros::TransportHints().tcpNoDelay(true));
   ros::Subscriber action = n->subscribe("xbot/action", 0, actionReceived, ros::TransportHints().tcpNoDelay(true));
+  ros::Subscriber ld19_safety_stop =
+      n->subscribe("/ld19_safety/stop", 1, ld19SafetyStopCallback, ros::TransportHints().tcpNoDelay(true));
 
   ros::ServiceServer high_level_control_srv = n->advertiseService("mower_service/high_level_control", highLevelCommand);
 
@@ -1113,16 +1138,6 @@ int main(int argc, char** argv) {
   ROS_INFO("Waiting for move base flex");
   if (!mbfClient->waitForServer(ros::Duration(60.0, 0.0))) {
     ROS_ERROR("Move base flex not found.");
-    delete (reconfigServer);
-    delete (mbfClient);
-    delete (mbfClientExePath);
-    delete (mbfClientRecovery);
-    return 3;
-  }
-
-  ROS_INFO("Waiting for mowing path progress server");
-  if (!pathProgressClient.waitForExistence(ros::Duration(60.0, 0.0))) {
-    ROS_ERROR("FTCLocalPlanner progress server not found.");
     delete (reconfigServer);
     delete (mbfClient);
     delete (mbfClientExePath);

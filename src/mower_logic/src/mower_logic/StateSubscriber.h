@@ -5,6 +5,8 @@
 #ifndef STATESUBSCRIBER_H
 #define STATESUBSCRIBER_H
 
+#include <cstdint>
+#include <mutex>
 #include "ros/ros.h"
 
 template <typename MESSAGE>
@@ -15,6 +17,8 @@ class StateSubscriber {
   void Start(ros::NodeHandle* n);
 
   MESSAGE getMessage();
+
+  bool getMessageSince(std::uint64_t& sequence, MESSAGE& message);
 
   bool hasMessage();
 
@@ -28,6 +32,7 @@ class StateSubscriber {
   MESSAGE message_{};
   ros::Time last_message_time_{};
   bool has_message_ = false;
+  std::uint64_t sequence_ = 0;
   ros::Subscriber subscriber_{};
 };
 
@@ -44,6 +49,15 @@ template <typename MESSAGE>
 MESSAGE StateSubscriber<MESSAGE>::getMessage() {
   std::lock_guard<std::mutex> lk{message_mutex_};
   return message_;
+}
+
+template <typename MESSAGE>
+bool StateSubscriber<MESSAGE>::getMessageSince(std::uint64_t& sequence, MESSAGE& message) {
+  std::lock_guard<std::mutex> lk{message_mutex_};
+  if (!has_message_ || sequence == sequence_) return false;
+  message = message_;
+  sequence = sequence_;
+  return true;
 }
 
 template <typename MESSAGE>
@@ -64,6 +78,7 @@ void StateSubscriber<MESSAGE>::setMessage(const MESSAGE& message) {
   last_message_time_ = ros::Time::now();
   message_ = message;
   has_message_ = true;
+  ++sequence_;
 }
 
 #endif  // STATESUBSCRIBER_H

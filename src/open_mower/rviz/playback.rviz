@@ -198,7 +198,7 @@ Visualization Manager:
       Radius: 0.029999999329447746
       Shaft Diameter: 0.10000000149011612
       Shaft Length: 0.10000000149011612
-      Topic: /move_base_flex/FreePlanner/global_plan
+      Topic: /move_base_flex/TebLocalPlannerROS/global_plan
       Unreliable: false
       Value: true
     - Alpha: 1
@@ -222,12 +222,12 @@ Visualization Manager:
       Radius: 0.029999999329447746
       Shaft Diameter: 0.10000000149011612
       Shaft Length: 0.10000000149011612
-      Topic: /move_base_flex/FreePlanner/local_plan
+      Topic: /move_base_flex/TebLocalPlannerROS/local_plan
       Unreliable: false
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /move_base_flex/FreePlanner/teb_markers
+      Marker Topic: /move_base_flex/TebLocalPlannerROS/teb_markers
       Name: Marker
       Namespaces:
         {}
@@ -247,7 +247,7 @@ Visualization Manager:
       Shaft Length: 0.23000000417232513
       Shaft Radius: 0.009999999776482582
       Shape: Arrow (Flat)
-      Topic: /move_base_flex/FreePlanner/teb_poses
+      Topic: /move_base_flex/TebLocalPlannerROS/teb_poses
       Unreliable: false
       Value: true
     - Alpha: 1

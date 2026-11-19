@@ -1,18 +1,51 @@
 TebLocalPlannerROS:
-  odom_topic: odom
-  map_frame: odom
+  odom_topic: /xbot_positioning/odom_out
+  map_frame: map
 
   # Robot Configuration Parameters (Differential Drive)
-  max_vel_x: 0.5
+  max_vel_x: 0.3
   max_vel_x_backwards: 0.2 # Mower can move backwards, but slower than forwards
+  max_vel_y: 0.0
   max_vel_theta: 1.0
   acc_lim_x: 0.5
+  acc_lim_y: 0.5
   acc_lim_theta: 0.8
 
   # Kinematics
   min_turning_radius: 0.0 # 0.0 means: can rotate on the spot (Differential)
 
-  # obstacle tolerance (LD19 data)
-  min_obstacle_dist: 0.25 # safety distance to objects in the Costmap
+  max_global_plan_lookahead_dist: 1.2
+  # Keep the selected pass monotonic and avoid looking through a hairpin.
+  ordered_plan_tracking: true
+  max_plan_heading_change: 1.0
+  global_plan_viapoint_sep: 0.25
+  via_points_ordered: true
+  complete_global_plan: true
+  feasibility_check_no_poses: 5
+  feasibility_check_lookahead_distance: 1.0
+
+  # Obstacle avoidance uses the LD19 observations in the local costmap.
+  min_obstacle_dist: 0.25
   include_costmap_obstacles: true
   costmap_obstacles_behind_robot_dist: 0.5
+  costmap_converter_plugin: "costmap_converter::CostmapToPolygonsDBSMCCH"
+  costmap_converter_spin_thread: true
+  costmap_converter_rate: 2
+  obstacle_poses_affected: 10
+
+  no_inner_iterations: 3
+  no_outer_iterations: 2
+  weight_obstacle: 80.0
+  # Prefer the ordered mowing path and forward motion without forbidding detours
+  # or reversing when those are needed to find a feasible trajectory.
+  weight_viapoint: 5.0
+  selection_viapoint_cost_scale: 1.0
+  weight_kinematics_forward_drive: 100.0
+
+  max_number_classes: 2
+  simple_exploration: true
+  roadmap_graph_no_samples: 8
+
+  footprint_model:
+    type: polygon
+    vertices: [[-0.25, -0.20], [-0.25, 0.20], [0.35, 0.20], [0.35, -0.20]]

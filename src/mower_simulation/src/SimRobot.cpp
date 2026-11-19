@@ -47,6 +47,7 @@ void SimRobot::GetTwist(double& vx, double& vr) {
 void SimRobot::ApplyEmergencyUpdate(uint16_t add, uint16_t clear) {
   std::lock_guard<std::mutex> lk{state_mutex_};
   emergency_reasons_ = (emergency_reasons_ & ~clear) | add;
+  if (emergency_reasons_ != 0) velocity_command_.clear();
 }
 
 void SimRobot::TriggerEmergency() {
@@ -54,6 +55,7 @@ void SimRobot::TriggerEmergency() {
   // Latch it: LATCH is never cleared by the high level's heartbeat (which only clears
   // HIGH_LEVEL), so the emergency stays until the high level explicitly resets it.
   emergency_reasons_ |= EmergencyReason::HIGH_LEVEL | EmergencyReason::LATCH;
+  velocity_command_.clear();
 }
 
 void SimRobot::ClearEmergency() {
@@ -112,27 +114,28 @@ SimRobot::SimControlState SimRobot::GetSimControlState() {
 
 void SimRobot::SetControlTwist(double linear, double angular) {
   std::lock_guard<std::mutex> lk{state_mutex_};
-  if (joy_override_) {
+  if (joy_override_ || emergency_reasons_ != 0) {
     return;
   }
-  vx_ = linear;
-  vr_ = angular;
+  if (!velocity_command_.set(linear, angular, VelocityCommand::Clock::now())) {
+    ROS_ERROR_THROTTLE(1.0, "Simulation: non-finite drive command rejected; stopping.");
+  }
 }
 
 void SimRobot::SetJoyOverride(bool enabled) {
   std::lock_guard<std::mutex> lk{state_mutex_};
   joy_override_ = enabled;
-  vx_ = 0.0;
-  vr_ = 0.0;
+  velocity_command_.clear();
 }
 
 void SimRobot::OnJoyVel(const geometry_msgs::Twist::ConstPtr& msg) {
   std::lock_guard<std::mutex> lk{state_mutex_};
-  if (!joy_override_) {
+  if (!joy_override_ || emergency_reasons_ != 0) {
     return;
   }
-  vx_ = msg->linear.x;
-  vr_ = msg->angular.z;
+  if (!velocity_command_.set(msg->linear.x, msg->angular.z, VelocityCommand::Clock::now())) {
+    ROS_ERROR_THROTTLE(1.0, "Simulation: non-finite joystick command rejected; stopping.");
+  }
 }
 
 void SimRobot::Displace(double dx, double dy, double dheading) {
@@ -203,6 +206,11 @@ void SimRobot::SimulationStep(const ros::TimerEvent& te) {
     PublishPosition();
     return;
   }
+  if (velocity_command_.expire(VelocityCommand::Clock::now())) {
+    ROS_WARN("Simulation: drive command timed out after 1 second; stopping.");
+  }
+  const double vx = velocity_command_.linear();
+  const double vr = velocity_command_.angular();
   // Update Position if not in emergency mode. Any emergency reason (latch, timeout, ...)
   // stops the robot, mirroring the firmware.
   if (emergency_reasons_ != 0) {
@@ -220,14 +228,14 @@ void SimRobot::SimulationStep(const ros::TimerEvent& te) {
     // frozen (so GPS reports no motion) while the reported wheel odometry / gyro below
     // still follows the commanded twist (wheels keep turning).
     if (movement_allowed_) {
-      if (fabs(vr_) > 1e-6) {
-        double r = vx_ / vr_;
-        pos_x_ += r * (sin(pos_heading_ + vr_ * time_diff_s) - sin(pos_heading_));
-        pos_y_ -= r * (cos(pos_heading_ + vr_ * time_diff_s) - cos(pos_heading_));
-        pos_heading_ += vr_ * time_diff_s;
+      if (fabs(vr) > 1e-6) {
+        double r = vx / vr;
+        pos_x_ += r * (sin(pos_heading_ + vr * time_diff_s) - sin(pos_heading_));
+        pos_y_ -= r * (cos(pos_heading_ + vr * time_diff_s) - cos(pos_heading_));
+        pos_heading_ += vr * time_diff_s;
       } else {
-        pos_x_ += vx_ * cos(pos_heading_) * time_diff_s;
-        pos_y_ += vx_ * sin(pos_heading_) * time_diff_s;
+        pos_x_ += vx * cos(pos_heading_) * time_diff_s;
+        pos_y_ += vx * sin(pos_heading_) * time_diff_s;
       }
       pos_heading_ = fmod(pos_heading_, M_PI * 2.0);
       if (pos_heading_ < 0) {
@@ -237,9 +245,9 @@ void SimRobot::SimulationStep(const ros::TimerEvent& te) {
 
     // Skip noise when the robot is commanded to rest; a stationary mower does not
     // random-walk its reported odometry either.
-    const bool at_rest = (vx_ == 0.0 && vr_ == 0.0);
-    last_noisy_vx_ = at_rest ? 0.0 : vx_ + linear_speed_noise(generator);
-    last_noisy_vr_ = at_rest ? 0.0 : vr_ + angular_speed_noise(generator);
+    const bool at_rest = (vx == 0.0 && vr == 0.0);
+    last_noisy_vx_ = at_rest ? 0.0 : vx + linear_speed_noise(generator);
+    last_noisy_vr_ = at_rest ? 0.0 : vr + angular_speed_noise(generator);
   }
 
   // Update Charger Status

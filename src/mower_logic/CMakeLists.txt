@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
         tf2_ros
         sensor_msgs
         robot_localization
+        std_msgs
         xbot_msgs
         xbot_positioning
         xbot_mqtt
@@ -191,7 +192,7 @@ add_executable(mower_logic
         src/mower_logic/behaviors/AreaRecordingBehavior.h
         src/mower_logic/behaviors/AreaRecordingBehavior.cpp
 )
-add_dependencies(mower_logic ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+add_dependencies(mower_logic mower_comms_v2 ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(mower_logic ${catkin_LIBRARIES} ${CRYPTOPP_LIBRARIES} nlohmann_json::nlohmann_json)
 # xbot_mqtt headers need C++17 (like mower_map)
 target_compile_features(mower_logic PRIVATE cxx_std_17)
@@ -246,6 +247,14 @@ target_link_libraries(monitoring ${catkin_LIBRARIES})
 #############
 ## Testing ##
 #############
+
+if(CATKIN_ENABLE_TESTING)
+  catkin_add_gtest(test_path_progress_watchdog test/path_progress_watchdog.cpp)
+  if(TARGET test_path_progress_watchdog)
+    target_link_libraries(test_path_progress_watchdog ${roscpp_LIBRARIES})
+  endif()
+  catkin_add_gtest(test_mowing_path_progress test/mowing_path_progress.cpp)
+endif()
 
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_mower_logic.cpp)

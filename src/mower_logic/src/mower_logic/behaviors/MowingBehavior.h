@@ -19,7 +19,6 @@
 
 #include "Behavior.h"
 #include "UndockingBehavior.h"
-#include "ftc_local_planner/PlannerGetProgress.h"
 #include "mower_map/MapArea.h"
 #include "slic3r_coverage_planner/Path.h"
 #include "slic3r_coverage_planner/PlanPath.h"

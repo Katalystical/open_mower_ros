@@ -16,6 +16,7 @@
 #include <thread>
 
 #include "EmergencyServiceBase.hpp"
+#include "VelocityCommand.h"
 
 class SimRobot {
  public:
@@ -99,10 +100,7 @@ class SimRobot {
   double docking_pos_heading_ = 0;
 
   bool started_ = false;
-  // Speed X in m/s
-  double vx_ = 0;
-  // Speed rotating in rad/s
-  double vr_ = 0;
+  VelocityCommand velocity_command_;
   // position and heading. This can be used to simulate GPS
   double pos_x_ = 0;
   double pos_y_ = 0;

@@ -230,6 +230,10 @@ target_add_service(mower_simulation MetaService ${CMAKE_CURRENT_SOURCE_DIR}/../.
 ## Testing ##
 #############
 
+if(CATKIN_ENABLE_TESTING)
+  catkin_add_gtest(test_velocity_command test/velocity_command.cpp)
+endif()
+
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_mower_simulation.cpp)
 # if(TARGET ${PROJECT_NAME}-test)

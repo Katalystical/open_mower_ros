@@ -1,6 +1,8 @@
 FTCPlanner:
   acceleration: 0.1
   check_obstacles: false
+  obstacle_lookahead: 5
+  obstacle_footprint: true
   oscillation_recovery: false
   debug_pid: true
   forward_only: true
