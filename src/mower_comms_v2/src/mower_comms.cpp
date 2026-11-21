@@ -175,6 +175,7 @@ int main(int argc, char** argv) {
   }
 
   ros::NodeHandle n;
+  ros::NodeHandle privateNh("~");
   ros::NodeHandle paramNh("/ll");
 
   highLevelClient = n.serviceClient<mower_msgs::HighLevelControlSrv>("mower_service/high_level_control");
@@ -183,8 +184,12 @@ int main(int argc, char** argv) {
   std::string bind_ip = "0.0.0.0";
   paramNh.getParam("bind_ip", bind_ip);
   ROS_INFO_STREAM("Bind IP (Robot Internal): " << bind_ip);
+  const bool xbot_rest_api_enabled = privateNh.param<bool>("xbot_service_rest_api", false);
+  if (xbot_rest_api_enabled) {
+    ROS_WARN("xBot service REST API enabled on port 18080.");
+  }
   xbot::serviceif::SetShutdownCallback([] { ros::requestShutdown(); });
-  ctx = xbot::serviceif::Start(true, bind_ip);
+  ctx = xbot::serviceif::Start(true, bind_ip, xbot_rest_api_enabled);
 
   // Start MetaService as early as possible, so the FW can exit its Stage-2 wait loop
   // Reads ll/board param; pushes it as RobotFirmware on every connect

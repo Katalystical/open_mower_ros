@@ -30,6 +30,7 @@
         <group unless="$(optenv OM_NO_COMMS False)">
             <!-- Use V2 Comms -->
             <node pkg="mower_comms_v2" type="mower_comms_v2" name="mower_comms_v2" output="screen" respawn="true" respawn_delay="10">
+                <param name="xbot_service_rest_api" value="$(optenv OM_XBOT_SERVICE_REST_API False)"/>
             </node>
         </group>
     </group>

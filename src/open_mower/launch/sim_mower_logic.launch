@@ -32,6 +32,7 @@
 
     <!-- Use V2 Comms -->
     <node pkg="mower_comms_v2" type="mower_comms_v2" name="mower_comms_v2" output="screen">
+        <param name="xbot_service_rest_api" value="$(optenv OM_XBOT_SERVICE_REST_API False)"/>
         <param name="wheel_ticks_per_m" value="0"/>
         <param name="wheel_distance_m" value="0"/>
         <param name="dfp_is_5v" value="$(optenv OM_DFP_IS_5V False)"/>
