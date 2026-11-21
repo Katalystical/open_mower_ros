@@ -5,20 +5,30 @@
 #include "MetaServiceInterface.h"
 
 bool MetaServiceInterface::OnConfigurationRequested(uint16_t service_id) {
-  (void)service_id;
+  ROS_INFO_STREAM("MetaService (ID " << service_id << ") requested configuration.");
 
-  StartTransaction(true);
-  SetRegisterRobotFirmware(firmware_name_.c_str(), firmware_name_.size());
-  CommitTransaction();
+  if (!StartTransaction(true)) {
+    ROS_ERROR("Failed to start MetaService configuration transaction.");
+    return false;
+  }
+
+  const bool register_set = SetRegisterRobotFirmware(firmware_name_.c_str(), firmware_name_.size());
+  const bool transaction_committed = CommitTransaction();
+  if (!register_set || !transaction_committed) {
+    ROS_ERROR_STREAM("Failed to send MetaService configuration (register set: "
+                     << register_set << ", transaction committed: " << transaction_committed << ").");
+    return false;
+  }
 
   configured_ = true;  // MetaService connected/configured => start reading the firmware version via RPC
   firmware_check_timer_.start();
+  ROS_INFO("MetaService configuration sent successfully.");
 
   return true;
 }
 
 void MetaServiceInterface::OnServiceDisconnected(uint16_t service_id) {
-  (void)service_id;
+  ROS_WARN_STREAM("MetaService (ID " << service_id << ") disconnected.");
 
   configured_ = false;
 
