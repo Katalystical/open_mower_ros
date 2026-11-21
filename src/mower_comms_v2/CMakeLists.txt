@@ -25,6 +25,9 @@ find_package(
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/share/cmake/geographiclib/")
 find_package(GeographicLib REQUIRED)
 
+set(MOWER_COMMS_GENERATED_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated/include)
+file(MAKE_DIRECTORY ${MOWER_COMMS_GENERATED_INCLUDE_DIR})
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -115,7 +118,7 @@ find_package(GeographicLib REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-        #  INCLUDE_DIRS include
+        INCLUDE_DIRS ${MOWER_COMMS_GENERATED_INCLUDE_DIR}
         #  LIBRARIES mower_comms_v2
         #  CATKIN_DEPENDS mower_msgs roscpp serial
         DEPENDS GeographicLib
@@ -200,6 +203,9 @@ target_add_service_interface(mower_comms_v2 MetaServiceInterface ${CMAKE_CURRENT
 add_subdirectory(lib/libfyaml)
 add_dependencies(mower_comms_v2 ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(mower_comms_v2 PUBLIC ${catkin_LIBRARIES} ${GeographicLib_LIBRARIES} fyaml)
+
+install(DIRECTORY ${MOWER_COMMS_GENERATED_INCLUDE_DIR}/
+        DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION})
 
 #############
 ## Install ##
